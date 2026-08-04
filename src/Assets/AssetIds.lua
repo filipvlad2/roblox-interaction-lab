@@ -6,6 +6,7 @@ return {
 	Sounds = {
 		ButtonClick = "rbxassetid://0",
 		RewardChime = "rbxassetid://0",
+		RewardSnap = "rbxassetid://0",
 		Notification = "rbxassetid://0",
 	},
 	Images = {

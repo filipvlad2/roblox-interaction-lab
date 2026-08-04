@@ -1,0 +1,4 @@
+line_endings = "Unix"
+indent_type = "Tabs"
+column_width = 120
+quote_style = "AutoPreferDouble"

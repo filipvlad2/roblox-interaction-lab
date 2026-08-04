@@ -1,5 +1,12 @@
 # Roadmap
 
+> **Superseded.** This roadmap sequenced which documents and Lab features
+> to build next, back when framework-building was the priority. Now that
+> the foundation is mature, `../ROADMAP_V2.md` replaces it with
+> implementation-only milestones: Lab polish, production interactions,
+> validation, reuse, and a small game built from the validated library.
+> Kept here as a record of the original plan.
+
 ## Design intent
 
 Each version below has exactly one job. A version is done when its job is

@@ -4,6 +4,12 @@ First real usage pass on the Companion Panel, inside actual Roblox Studio.
 This document treats the panel as shipped, working software and reviews
 what usage surfaced — not a redesign.
 
+> **Addendum:** the dropdown-dismiss scrim added below (under "Benchmark
+> dropdown didn't close on an outside click") shipped with a real bug of
+> its own — a full-screen opaque blue rectangle that intermittently
+> replaced the Roblox world. Root cause and fix are documented at the end
+> of this file, under "Regression: the blue-screen bug."
+
 ## Problems discovered
 
 1. Dragging the panel by its title bar made it disappear.
@@ -206,3 +212,76 @@ have compounded over hundreds of uses (stray dropdowns, unclear
 placeholders, no drag affordance) is addressed. That's real progress
 toward a daily tool. It is not the same claim as "ready for long-term
 daily use," which is what v1.0 means, and I'm not making that claim here.
+
+## Regression: the blue-screen bug
+
+A second real-usage report: the Roblox world intermittently disappeared
+behind a solid blue rectangle while switching or interacting with
+benchmarks — a direct violation of "the Roblox world is the preview."
+
+**Root cause.** The dismiss-scrim added above (to close the benchmark
+dropdown on an outside click) was built with `UIBuilder.button({ ...,
+BackgroundTransparency = 1 })`. `UIBuilder.button` never read
+`props.BackgroundTransparency` — unlike `UIBuilder.frame` and
+`UIBuilder.label`, which both do. The prop was silently dropped. Roblox's
+own default for a new `TextButton.BackgroundTransparency` is `0` (fully
+opaque), and since the scrim also never set `BackgroundColor3`, it fell
+back to `Theme.Colors.Accent` — `Color3.fromRGB(90, 140, 255)`, a solid
+blue. Combined with the scrim's deliberately oversized `Size = UDim2.new(20,
+0, 20, 0)` (built that large specifically to cover the screen without
+needing a `ScreenGui` reference — see the scrim's own comment in
+`BenchmarkSelector.lua`), the result was a giant opaque blue rectangle
+covering the game every time `scrim.Visible` was `true` — i.e. exactly
+while the benchmark dropdown was open, which is how you switch
+benchmarks in the first place.
+
+Everything else named in the investigation checklist was traced and
+ruled out: `WorldStage` remains correctly transparent and is never
+touched by this path; `LabController`'s mount/unmount cycle for
+switching stations and variants is unrelated and unaffected; no `ZIndex`
+ordering was wrong (the scrim's `ZIndex = 4` was always correct — the
+problem was that it was opaque, not that it was mis-ordered); nothing
+was left mounted after a station change that shouldn't have been.
+
+**Why this was a root-cause fix, not a patch.** The obvious quick fix —
+set `scrim.BackgroundTransparency = 1` directly after construction,
+mirroring how other buttons in this codebase set properties the
+constructor doesn't support — would have made the one call site correct
+again without addressing why it was so easy to get wrong: `UIBuilder`'s
+three constructors were inconsistent with each other for no reason
+(`frame`/`label` honor `BackgroundTransparency` from their props table,
+`button` silently didn't), which is exactly the kind of gap that
+produces this same mistake again the next time someone adds an overlay
+button. The fix was made in `UIBuilder.button` itself, one line, matching
+the pattern `frame` already uses:
+
+```lua
+button.BackgroundTransparency = props.BackgroundTransparency or 0
+```
+
+`BenchmarkSelector.lua` itself needed no changes — its scrim's props
+table was already correct; the shared constructor it called was not.
+
+**Files modified:**
+- `src/Shared/UIBuilder.lua` — added the missing
+  `BackgroundTransparency` handling to `UIBuilder.button`.
+
+**Verification.** A full-repository search for every `UIBuilder.button`
+call that passes `BackgroundTransparency` in its props table (the exact
+shape of this bug) was run before and after the fix; the scrim in
+`BenchmarkSelector.lua` is the only such call site anywhere in `src/`.
+Since that scrim is created once inside `BenchmarkSelector`, which is
+mounted once per Companion Panel and shared across every station and
+variant (not recreated per benchmark), the fix applies uniformly
+regardless of which benchmark is active — there's no station-specific or
+variant-specific code path that could still trigger the old behavior.
+`luau-ast` was re-run across every `.lua` file after the change; no
+syntax errors.
+
+This was checked by static tracing and a full-codebase search, not by
+opening Studio and clicking through every benchmark — I still have no
+Roblox client in this execution environment. That gap is real and is the
+same caveat as everywhere else in this document: someone should confirm
+in Studio that switching repeatedly through all five stations and their
+variants no longer shows any flash of blue before this is trusted as
+closed.

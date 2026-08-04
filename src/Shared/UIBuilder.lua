@@ -48,6 +48,7 @@ function UIBuilder.button(props)
 	button.Name = props.Name or "Button"
 	button.AutoButtonColor = false
 	button.BackgroundColor3 = props.BackgroundColor3 or Theme.Colors.Accent
+	button.BackgroundTransparency = props.BackgroundTransparency or 0
 	button.BorderSizePixel = 0
 	button.Font = props.Font or Theme.FontBold
 	button.TextColor3 = props.TextColor3 or Theme.Colors.Text

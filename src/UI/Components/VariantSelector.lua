@@ -42,6 +42,10 @@ function VariantSelector.Mount(parent, controller)
 	scroller.Parent = root
 
 	local function rebuildTabs()
+		-- Switching stations can switch to a shorter tab list; without this,
+		-- a scroll position left over from a longer list could leave the new
+		-- (shorter) one scrolled out of view entirely.
+		scroller.CanvasPosition = Vector2.zero
 		scroller:ClearAllChildren()
 
 		local layout = Instance.new("UIListLayout")

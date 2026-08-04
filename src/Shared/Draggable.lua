@@ -14,16 +14,31 @@ local function isPointerMove(inputType: Enum.UserInputType)
 	return inputType == Enum.UserInputType.MouseMovement or inputType == Enum.UserInputType.Touch
 end
 
+-- Scale * containerSize + Offset = the true absolute pixel value a UDim
+-- coordinate represents. Everything below works in this single space so a
+-- drag never mixes a Scale-relative reading with an Offset-only one.
+local function toAbsolute(coordinate: UDim, containerSize: number)
+	return coordinate.Scale * containerSize + coordinate.Offset
+end
+
 local Draggable = {}
 
 function Draggable.enable(handle: GuiObject, target: GuiObject)
 	local dragging = false
 	local dragStart = Vector3.zero
-	local startPosition = target.Position
+	local startAbsoluteX = 0
+	local startAbsoluteY = 0
 
-	local function clampToScreen(position: UDim2)
+	local function getScreenSize(): Vector2
 		local screenGui = target.Parent
-		local screenSize = (screenGui and screenGui:IsA("GuiBase2d")) and screenGui.AbsoluteSize or Vector2.zero
+		if screenGui and screenGui:IsA("GuiBase2d") then
+			return screenGui.AbsoluteSize
+		end
+		return Vector2.zero
+	end
+
+	local function clampToScreen(absoluteX: number, absoluteY: number)
+		local screenSize = getScreenSize()
 		local size = target.AbsoluteSize
 		local anchor = target.AnchorPoint
 
@@ -32,10 +47,10 @@ function Draggable.enable(handle: GuiObject, target: GuiObject)
 		local minY = -size.Y * anchor.Y
 		local maxY = screenSize.Y - size.Y * (1 - anchor.Y)
 
-		local x = math.clamp(position.X.Offset, minX, math.max(minX, maxX))
-		local y = math.clamp(position.Y.Offset, minY, math.max(minY, maxY))
+		local x = math.clamp(absoluteX, minX, math.max(minX, maxX))
+		local y = math.clamp(absoluteY, minY, math.max(minY, maxY))
 
-		return UDim2.new(0, x, 0, y)
+		return x, y
 	end
 
 	handle.InputBegan:Connect(function(input)
@@ -45,7 +60,18 @@ function Draggable.enable(handle: GuiObject, target: GuiObject)
 
 		dragging = true
 		dragStart = input.Position
-		startPosition = target.Position
+
+		-- Read the panel's current position in absolute pixels regardless of
+		-- whether it's currently expressed with Scale (its default, anchored
+		-- to an edge) or pure Offset (after a previous drag). Clamping a
+		-- Scale-relative Offset as if it were already absolute - which the
+		-- previous version of this file did - is what caused the panel to
+		-- jump off-screen the instant a drag started: see
+		-- InteractionLab/POST_PLAYTEST_REVIEW.md for the full root-cause
+		-- writeup.
+		local screenSize = getScreenSize()
+		startAbsoluteX = toAbsolute(target.Position.X, screenSize.X)
+		startAbsoluteY = toAbsolute(target.Position.Y, screenSize.Y)
 
 		local endedConnection
 		endedConnection = input.Changed:Connect(function()
@@ -62,13 +88,8 @@ function Draggable.enable(handle: GuiObject, target: GuiObject)
 		end
 
 		local delta = input.Position - dragStart
-		local rawPosition = UDim2.new(
-			startPosition.X.Scale,
-			startPosition.X.Offset + delta.X,
-			startPosition.Y.Scale,
-			startPosition.Y.Offset + delta.Y
-		)
-		target.Position = clampToScreen(rawPosition)
+		local x, y = clampToScreen(startAbsoluteX + delta.X, startAbsoluteY + delta.Y)
+		target.Position = UDim2.new(0, x, 0, y)
 	end)
 end
 

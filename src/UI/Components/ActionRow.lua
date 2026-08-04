@@ -77,6 +77,13 @@ function ActionRow.Mount(parent, controller)
 		button.LayoutOrder = index
 		button.AutoButtonColor = false
 		button.Active = false
+		-- Deliberately ghosted, not just "a quieter button": PanelAlt at full
+		-- opacity reads as an ordinary secondary control (like the benchmark
+		-- selector's toggle), which invited clicking these expecting
+		-- something to happen. Lower opacity on both layers reads as
+		-- genuinely disabled at a glance instead.
+		button.BackgroundTransparency = 0.5
+		button.TextTransparency = 0.35
 		UIBuilder.corner(UDim.new(0, 6)).Parent = button
 	end
 

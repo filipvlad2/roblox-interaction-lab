@@ -61,6 +61,30 @@ function BenchmarkSelector.Mount(parent, controller)
 	optionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	optionsLayout.Parent = popout
 
+	-- Oversized and centered on root rather than screen-sized: this avoids
+	-- needing a reference to the ScreenGui just to cover "everything else."
+	-- Sits below the popout's own ZIndex (5) so its option buttons still
+	-- receive clicks normally, and above everything else in the panel and
+	-- the game behind it, so a click anywhere outside the open list closes
+	-- it instead of silently doing nothing and leaving it floating open.
+	local scrim = UIBuilder.button({
+		Parent = root,
+		Name = "Scrim",
+		Text = "",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		Size = UDim2.new(20, 0, 20, 0),
+		BackgroundTransparency = 1,
+	})
+	scrim.AutoButtonColor = false
+	scrim.ZIndex = 4
+	scrim.Visible = false
+
+	local function setOpen(open: boolean)
+		popout.Visible = open
+		scrim.Visible = open
+	end
+
 	local function refreshToggleText()
 		toggleButton.Text = controller:GetCurrentStation().Name .. "  \226\150\190"
 	end
@@ -83,18 +107,21 @@ function BenchmarkSelector.Mount(parent, controller)
 
 		option.MouseButton1Click:Connect(function()
 			controller:SelectStation(index)
-			popout.Visible = false
+			setOpen(false)
 		end)
 	end
 
 	toggleButton.MouseButton1Click:Connect(function()
-		popout.Visible = not popout.Visible
+		setOpen(not popout.Visible)
+	end)
+	scrim.MouseButton1Click:Connect(function()
+		setOpen(false)
 	end)
 
 	refreshToggleText()
 	controller.StationChanged:Connect(function()
 		refreshToggleText()
-		popout.Visible = false
+		setOpen(false)
 	end)
 
 	return root

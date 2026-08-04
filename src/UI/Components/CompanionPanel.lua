@@ -13,6 +13,8 @@
 -- its dragged Position is naturally remembered for the rest of the session
 -- without any extra bookkeeping.
 
+local UserInputService = game:GetService("UserInputService")
+
 local Theme = require(script.Parent.Parent.Parent.Shared.Theme)
 local UIBuilder = require(script.Parent.Parent.Parent.Shared.UIBuilder)
 local Draggable = require(script.Parent.Parent.Parent.Shared.Draggable)
@@ -33,6 +35,13 @@ local TITLE_BUTTON_WIDTH = 34
 local TITLE_BUTTON_GAP = 4
 local TITLE_BUTTON_COUNT = 3
 local TITLE_BUTTONS_RIGHT_MARGIN = 8
+
+-- Drag affordance: a small always-visible grip and a subtle hover tint on
+-- the draggable region, so "this moves the panel" reads at a glance without
+-- adding a border or icon that competes with the title text.
+local GRIP_DOT_SIZE = 3
+local GRIP_DOT_GAP = 3
+local HOVER_TINT_TRANSPARENCY = 0.88
 
 local BODY_PADDING = 10
 local ROW_GAP = 8
@@ -96,15 +105,52 @@ function CompanionPanel.Mount(parent, controller)
 		Size = UDim2.new(1, -(TITLE_BUTTONS_WIDTH + TITLE_BUTTONS_RIGHT_MARGIN + 4), 1, 0),
 		BackgroundTransparency = 1,
 	})
+	UIBuilder.corner(UDim.new(0, 6)).Parent = dragHandle
+
+	-- Grip dots (always visible) plus a hover tint make "this area drags the
+	-- panel" legible at a glance, without adding a border, icon font, or
+	-- anything that competes with the title text for attention.
+	local gripDots = UIBuilder.frame({
+		Parent = dragHandle,
+		Name = "GripDots",
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 10, 0.5, 0),
+		Size = UDim2.new(0, GRIP_DOT_SIZE * 3 + GRIP_DOT_GAP * 2, 0, GRIP_DOT_SIZE),
+		BackgroundTransparency = 1,
+	})
+	local gripDotsLayout = Instance.new("UIListLayout")
+	gripDotsLayout.FillDirection = Enum.FillDirection.Horizontal
+	gripDotsLayout.Padding = UDim.new(0, GRIP_DOT_GAP)
+	gripDotsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	gripDotsLayout.Parent = gripDots
+	for dotIndex = 1, 3 do
+		local dot = Instance.new("Frame")
+		dot.Name = "Dot" .. dotIndex
+		dot.LayoutOrder = dotIndex
+		dot.Size = UDim2.fromOffset(GRIP_DOT_SIZE, GRIP_DOT_SIZE)
+		dot.BackgroundColor3 = Theme.Colors.TextMuted
+		dot.BorderSizePixel = 0
+		dot.Parent = gripDots
+		UIBuilder.corner(UDim.new(1, 0)).Parent = dot
+	end
+
 	UIBuilder.label({
 		Parent = dragHandle,
 		Name = "Title",
 		Text = "Interaction Lab",
-		Position = UDim2.new(0, 10, 0, 0),
-		Size = UDim2.new(1, -10, 1, 0),
+		Position = UDim2.new(0, 10 + GRIP_DOT_SIZE * 3 + GRIP_DOT_GAP * 2 + 8, 0, 0),
+		Size = UDim2.new(1, -(10 + GRIP_DOT_SIZE * 3 + GRIP_DOT_GAP * 2 + 8), 1, 0),
 		Font = Theme.FontBold,
 		TextSize = 13,
 	})
+
+	dragHandle.MouseEnter:Connect(function()
+		dragHandle.BackgroundTransparency = HOVER_TINT_TRANSPARENCY
+		dragHandle.BackgroundColor3 = Theme.Colors.Background
+	end)
+	dragHandle.MouseLeave:Connect(function()
+		dragHandle.BackgroundTransparency = 1
+	end)
 
 	local titleButtons = UIBuilder.frame({
 		Parent = titleBar,
@@ -123,7 +169,12 @@ function CompanionPanel.Mount(parent, controller)
 	local collapseButton = makeTitleButton(titleButtons, "Less", 1)
 	local minimizeButton = makeTitleButton(titleButtons, "Min", 2)
 	local settingsButton = makeTitleButton(titleButtons, "...", 3)
+	-- Ghosted rather than just inactive: at matching opacity to the working
+	-- Less/Min buttons next to it, an inert button gives no feedback when
+	-- clicked and reads as broken rather than "not built yet."
 	settingsButton.Active = false
+	settingsButton.BackgroundTransparency = 0.5
+	settingsButton.TextTransparency = 0.35
 
 	-- Body ---------------------------------------------------------------
 	local body = UIBuilder.frame({
@@ -167,6 +218,13 @@ function CompanionPanel.Mount(parent, controller)
 	chipPadding.PaddingLeft = UDim.new(0, 10)
 	chipPadding.PaddingRight = UDim.new(0, 10)
 	chipPadding.Parent = chip
+
+	chip.MouseEnter:Connect(function()
+		chip.BackgroundColor3 = Theme.Colors.PanelAlt
+	end)
+	chip.MouseLeave:Connect(function()
+		chip.BackgroundColor3 = Theme.Colors.Panel
+	end)
 
 	Draggable.enable(dragHandle, panel)
 	Draggable.enable(chip, panel)
@@ -224,6 +282,21 @@ function CompanionPanel.Mount(parent, controller)
 	controller.VariantChanged:Connect(function()
 		if uiState.minimized then
 			chip.Text = currentLabel()
+		end
+	end)
+
+	-- F8 hides or restores the whole panel, independent of expanded/
+	-- collapsed/minimized - a way to get the Lab fully out of the way (for a
+	-- screenshot, a demo, or just a clean look at the game) without losing
+	-- whatever state it was left in. Ignores input already claimed by
+	-- another UI element (typing in a chat box, a TextBox, etc.) so it never
+	-- fires while the player is typing "F8" as part of something else.
+	UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+		if gameProcessedEvent then
+			return
+		end
+		if input.KeyCode == Enum.KeyCode.F8 then
+			panel.Visible = not panel.Visible
 		end
 	end)
 

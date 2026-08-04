@@ -1,5 +1,11 @@
 # Layout
 
+> **Superseded.** This full-viewport layout was identified as a
+> fundamental UX problem: it made the Lab compete with the game for the
+> whole screen instead of coexisting with it. `LAYOUT_V2.md` replaces this
+> direction with a non-intrusive workspace design. Kept here as a record
+> of what was tried and why it changed.
+
 ## Design intent
 
 The layout has one job: keep the interaction itself as the largest, calmest

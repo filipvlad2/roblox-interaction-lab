@@ -18,6 +18,20 @@ These five are not five answers to the same question. They're five
 different emotional jobs a reward can do. A game will likely need more
 than one.
 
+**On the image prompts:** each concept below carries three, not one —
+**Variation A** is the most literal reading of that concept's Motion and
+Visual language sections above; **Variation B** pushes the same concept
+toward AAA cinematic production value; **Variation C** reinterprets the
+same philosophy through Roblox's actual visual idiom (rounded UI,
+flat-shaded materials, Builder Sans-style type) — the version closest to
+what could plausibly ship. Each variation is broken into labeled fields;
+concatenate them, comma-separated, into a single prompt string when
+sending to an image model. A negative prompt follows each concept's three
+variations and applies to all three, since it encodes what would violate
+that philosophy specifically, not just generic image-quality boilerplate.
+Fifteen prompts total, five negative prompts — enough to generate a full
+first pass of concept art before any implementation begins.
+
 ---
 
 ## 1. Satisfying
@@ -91,16 +105,63 @@ A once-a-season achievement, a rare item, anything meant to be remembered
 or shared. This philosophy applied to a big moment makes it feel like
 nothing happened.
 
-### AI Image Prompt
-> A minimalist mobile game UI close-up, a small golden coin icon popping
-> into existence with a sharp elastic scale-bounce, a tight burst of 6-8
-> small bright particles radiating a short distance from it, a single
-> bright white flash concentrated tightly around the coin, dark neutral
-> UI background staying completely static and unlit, no ambient glow, no
-> lens flare, crisp clean vector icon style, high contrast between the
-> flash and the dark background, frozen mid-bounce at the peak of the
-> overshoot, sense of a fast snappy mechanical impact, product-shot
-> lighting, 4k UI mockup
+### Visual Exploration — Three Image Prompts
+
+#### Variation A — Faithful
+- **Composition:** small centered reward icon (coin/gem) alone against a dark neutral field, generous empty space around it so the pop reads instantly
+- **Camera angle:** flat, straight-on orthographic HUD view, no perspective depth
+- **Framing:** tight close-up crop on the icon and its immediate particle burst only, no surrounding UI chrome visible
+- **UI layout:** none beyond the icon itself — a HUD micro-moment, not a screen
+- **Lighting:** one sharp, instantaneous white flash sourced directly behind/around the icon, no ambient fill
+- **Materials:** simple flat-shaded vector icon material, glossy highlight on one edge only
+- **Typography:** none — no text in frame
+- **Glow:** a tight, hard-edged glow ring exactly at the icon's silhouette, not a soft bloom
+- **Particles:** 6-8 small bright triangular/circular shards, short travel distance, uniform size
+- **Implied motion:** icon frozen at the peak of a scale overshoot, particles mid-flight outward, a snap just completed
+- **Emotional atmosphere:** quick, clean, almost mechanical satisfaction — a single decisive click made visible
+- **Color palette:** dark neutral charcoal background, one saturated warm color (gold or cyan) for the icon and flash
+- **Realism level:** clean flat/semi-realistic vector-render hybrid, not photoreal
+- **Focal pull:** the flash-lit icon at dead center is the only thing the eye can land on
+
+#### Variation B — Premium / AAA
+- **Composition:** centered-icon idea rendered with cinematic depth — subtle parallax dust and a soft depth-of-field falloff behind the icon
+- **Camera angle:** slight low-angle push toward the icon, like a macro product shot
+- **Framing:** extreme close-up, icon fills a third of the frame, shallow focus falloff at the edges
+- **UI layout:** a barely-visible, out-of-focus HUD edge in the far background to suggest context without competing for attention
+- **Lighting:** a physically-based hard key flash with realistic falloff and a faint bounce light catching the icon's underside
+- **Materials:** high-fidelity metallic PBR surface — real specular highlights, subtle micro-scratches, believable metal or crystal
+- **Typography:** none
+- **Glow:** crisp HDR bloom exactly at the flash point, tightly controlled so it doesn't wash out material detail
+- **Particles:** physically-simulated metallic shards catching individual specular highlights as they fly
+- **Implied motion:** motion-frozen mid-bounce with faint motion blur trailing the fastest particles, speed sold without smearing the icon
+- **Emotional atmosphere:** a satisfying impact rendered with real weight and craftsmanship — still instant, but expensive-feeling instant
+- **Color palette:** dark neutral background, one rich saturated accent color with true HDR highlight values
+- **Realism level:** near-photoreal cinematic render, Unreal Engine-quality material and lighting fidelity
+- **Focal pull:** the specular hot-spot on the icon's material, reinforced by the tightest point of the bloom
+
+#### Variation C — Stylized / Roblox-native
+- **Composition:** centered chunky icon with rounded, friendly proportions against a simple flat-colored backdrop
+- **Camera angle:** flat orthographic HUD view, matching how Roblox mobile/PC UI actually renders
+- **Framing:** icon sized as it would appear inside a real Roblox currency counter or inventory slot, a rounded UI frame edge just entering the shot
+- **UI layout:** a simple rounded rectangle counter/slot element (UICorner-style rounded frame) partially visible at one edge, coin mid-flight toward it
+- **Lighting:** bright, even, cheerful — no dramatic shadow, flat toon-shaded lighting typical of Roblox's default rendering
+- **Materials:** smooth, glossy, slightly plasticky flat-shaded material, the characteristic look of a Roblox MeshPart or simple icon asset
+- **Typography:** a small, chunky, rounded sans-serif "+1" or "+10" popping up beside the icon, Gotham/Builder-Sans-style
+- **Glow:** a simple bright rim-light outline around the icon, Roblox ParticleEmitter-style radial glow, not a photographic bloom
+- **Particles:** small bright rounded sparkle shapes, uniform and toy-like, scattering in a simple radial burst
+- **Implied motion:** a bouncy squash-and-stretch pop, exaggerated slightly beyond real-world physics the way Roblox UI typically animates
+- **Emotional atmosphere:** cheerful, energetic, instantly readable — built for a young, broad audience
+- **Color palette:** bright saturated primary colors (Roblox-typical blues, golds, greens) against a clean flat background
+- **Realism level:** flat-shaded stylized 3D, low-poly-adjacent, unmistakably a Roblox UI asset rather than a photoreal render
+- **Focal pull:** the bouncing icon plus its floating "+" text, read together as one unit
+
+#### Negative Prompt
+No slow or ceremonial mood; no sustained ambient glow or lingering light;
+no particle showers or confetti; no large empty dramatic backgrounds; no
+somber or moody color grading; no text-heavy UI chrome; no clutter
+competing with the icon; no lens flare streaks; no photorealistic human
+hands or faces; no blurry or illegible micro-text; no dark/desaturated
+palette; nothing implying the moment lasts longer than an instant.
 
 ---
 
@@ -178,18 +239,63 @@ Anything happening more than a handful of times per session. A Prestige
 reveal for a common drop reads as absurd overstatement almost
 immediately.
 
-### AI Image Prompt
-> A ceremonial video game achievement reveal UI, a golden ornate emblem
-> slowly rising into frame at the vertical center of a darkened screen, a
-> single dramatic beam of warm golden light sweeping diagonally across
-> the emblem from upper left, soft wide glow radiating outward with
-> visible light rays, fine drifting dust particles caught in the beam
-> rising slowly, deep navy and black vignette surround fading to full
-> darkness at the edges, rich gold and bronze metallic color palette,
-> elegant serif-adjacent rank title text below the emblem still forming,
-> symmetrical and centered composition, cinematic and reverent mood,
-> subtle lens flare from the light sweep, high production value AAA game
-> UI concept art, wide aspect ratio
+### Visual Exploration — Three Image Prompts
+
+#### Variation A — Faithful
+- **Composition:** symmetrical, centered vertical composition — emblem on the vertical axis, generous dark space above and below
+- **Camera angle:** straight-on, slightly low, as if looking up at something presented on a pedestal
+- **Framing:** medium shot — emblem plus enough surrounding darkness to feel like a stage, title text area visible below but still forming
+- **UI layout:** a clean vertical stack — emblem, then a horizontal divider line, then title text space — nothing beside it
+- **Lighting:** one dramatic diagonal spotlight beam sweeping across the emblem from upper-left, rest of frame in deep shadow
+- **Materials:** cast metal or embossed emblem material — matte gold with polished raised edges
+- **Typography:** elegant serif-adjacent engraved-style lettering, evenly kerned, still resolving below the emblem
+- **Glow:** broad, soft ambient glow radiating from the emblem outward, no hard edges
+- **Particles:** fine dust motes drifting slowly upward through the light beam, sparse and unhurried
+- **Implied motion:** emblem caught mid-rise, faint upward motion trail beneath it, the spotlight sweep still visibly in transit
+- **Emotional atmosphere:** reverent, ceremonial, hushed — a coronation moment
+- **Color palette:** deep navy-black surround, rich gold and bronze metallics, no other hues
+- **Realism level:** cinematic semi-realistic render, believable materials without full photoreal skin/fabric detail
+- **Focal pull:** the point where the spotlight beam crosses the emblem's highest raised surface
+
+#### Variation B — Premium / AAA
+- **Composition:** the same symmetrical stage expanded into fuller environmental context — a suggestion of an arena, hall, or altar space receding into darkness behind the emblem
+- **Camera angle:** slow cinematic low-angle push-in, a faint sense of camera movement implied through motion blur at the frame edges
+- **Framing:** wider shot including environmental context (columns, floor reflection, architectural silhouettes) without ever competing with the emblem
+- **UI layout:** emblem and text integrated into a believable in-world ceremonial set piece rather than flat HUD chrome
+- **Lighting:** volumetric god-rays through the spotlight beam, visible atmospheric haze, realistic light falloff and bounce onto a reflective floor
+- **Materials:** physically-based gold and bronze with real anisotropic metal highlights, fine engraved micro-detail visible up close, a faint reflection on a polished floor below
+- **Typography:** precisely engraved metallic lettering with real dimensional depth and a subtle specular catch-light along each letter's edge
+- **Glow:** full volumetric bloom with visible light shafts, HDR highlight blowout exactly at the beam's core
+- **Particles:** denser, more visible drifting dust and faint floating embers, each catching individual light glints
+- **Implied motion:** a powerful sense of a just-completed rise, floor-reflection still rippling, dust still settling
+- **Emotional atmosphere:** full AAA cinematic grandeur — the scale and craft of a boss-defeat cutscene or Olympic medal ceremony
+- **Color palette:** deep black-navy surround, saturated gold/bronze/royal-blue, one crisp white highlight point
+- **Realism level:** photoreal cinematic render, film-quality volumetric lighting and material fidelity
+- **Focal pull:** the volumetric light shaft's brightest core striking the emblem's highest point, reflected faintly on the floor below
+
+#### Variation C — Stylized / Roblox-native
+- **Composition:** centered chunky emblem/badge icon, simplified into bold flat shapes rather than fine engraving
+- **Camera angle:** flat HUD-facing view with a simple radial light burst behind it, no environmental depth
+- **Framing:** medium-tight shot of the badge and a rounded UI card frame beginning to form beneath it
+- **UI layout:** a rounded rectangular "rank card" (UICorner-style panel) rising into frame, badge icon on top, bold text label below inside the card
+- **Lighting:** simplified radial light burst (Roblox beam/ParticleEmitter-style) rather than volumetric haze — bright rays drawn as flat graphic shapes
+- **Materials:** smooth flat-shaded gold material with a single bright highlight band, toy-like rather than finely engraved
+- **Typography:** bold, chunky, rounded sans-serif rank title, high legibility, Roblox default UI font weight
+- **Glow:** a bright flat-colored radial glow behind the badge, graphic rather than photographic
+- **Particles:** simple bright star or sparkle shapes arranged in a clean radial pattern, not naturalistic dust
+- **Implied motion:** a confident upward pop-and-settle, slight bounce at the top of the rise
+- **Emotional atmosphere:** proud and celebratory but friendly and readable rather than solemn — achievement-unlocked energy
+- **Color palette:** bright gold and royal blue against a simple dark or gradient backdrop, high saturation throughout
+- **Realism level:** flat-shaded stylized 3D/2D hybrid, clean vector-adjacent rendering typical of Roblox badge and rank UI
+- **Focal pull:** the badge icon at the card's top edge, reinforced by the radial burst directly behind it
+
+#### Negative Prompt
+No fast or snappy motion energy; no bright primary-color confetti
+bursts; no busy or cluttered background detail; no comedic or cartoonish
+exaggeration; no more than one light source; no crowded typography or
+multiple competing text blocks; no low-contrast washed-out lighting; no
+handheld-camera shake; no random unrelated particles; no visual noise
+around the emblem; nothing that reads as casual or throwaway.
 
 ---
 
@@ -276,19 +382,64 @@ Free, common, or frequent rewards. The restraint reads as anticlimactic,
 not sophisticated, if the player doesn't already believe the item is
 valuable.
 
-### AI Image Prompt
-> A luxury product-style video game item reveal UI, a single dark
-> rectangular case slowly opening at its hinge on a deep charcoal
-> gradient background, soft directional studio lighting catching the
-> brushed metal interior surface, one small cosmetic item resting inside
-> on dark velvet-like material, a single thin gold accent line along the
-> case edge as the only saturated color, extremely minimal composition
-> with large areas of negative space, no particles, no glow burst, no
-> motion blur, soft even shadows, shallow depth of field with the item in
-> sharp focus, styled like a high-end watch or jewelry advertisement,
-> muted near-monochrome palette with one precise gold highlight,
-> restrained and confident mood, professional product photography
-> lighting, 4k concept render
+### Visual Exploration — Three Image Prompts
+
+#### Variation A — Faithful
+- **Composition:** a single small object off-center within a large, mostly empty frame — negative space is the dominant compositional element
+- **Camera angle:** eye-level, perfectly still, no dramatic tilt
+- **Framing:** wide enough that the object occupies a small fraction of the frame, deliberately underscored by empty space
+- **UI layout:** no UI chrome at all — reads as a product photograph, not a HUD element
+- **Lighting:** single soft directional studio light source, long soft shadow, gentle falloff across a gradiented backdrop
+- **Materials:** brushed metal case or velvet-lined interior, fine fabric grain and metal texture both clearly readable
+- **Typography:** none, or a single small discreet label in a thin, minimal sans-serif, easily missed
+- **Glow:** none — light is entirely functional/material-revealing, never decorative
+- **Particles:** none
+- **Implied motion:** a case caught at the exact midpoint of opening, hinge still visibly in motion, nothing else moving
+- **Emotional atmosphere:** quiet, controlled, confident — the visual equivalent of a held breath
+- **Color palette:** near-monochrome charcoal and warm grey, one small precise gold or jewel-tone accent
+- **Realism level:** clean product-photography realism, sharp focus on the object, soft falloff elsewhere
+- **Focal pull:** the single accent color point against an otherwise desaturated frame
+
+#### Variation B — Premium / AAA
+- **Composition:** the same restrained single-object framing, with a more elaborate, believable environment implied at the very edges of focus — a hint of a display room or vault
+- **Camera angle:** an extremely slow implied orbit, captured mid-turn, object at a three-quarter angle showing both its form and a catching highlight
+- **Framing:** tight, controlled close-up with genuine shallow depth of field, background fully dissolved into soft bokeh
+- **UI layout:** no UI chrome — full cinematic product-shot realism, as if for a real luxury brand campaign
+- **Lighting:** multi-source studio lighting rig implied — a soft key, a subtle rim light separating the object from the background, realistic global illumination
+- **Materials:** fully physically-based rendering — real anisotropic brushed metal, glass with accurate refraction, fabric with visible weave under raking light
+- **Typography:** a minimal engraved or embossed logotype-style mark, barely visible, catching light rather than being lit directly
+- **Glow:** none — strictly no decorative glow, only physically accurate specular highlights
+- **Particles:** none
+- **Implied motion:** a faint, almost imperceptible motion blur on the one moving hinge or surface, everything else tack-sharp
+- **Emotional atmosphere:** full luxury-advertising production value — the confidence of a brand with nothing to prove
+- **Color palette:** near-monochrome deep charcoal and warm neutral tones, one precise saturated accent rendered in true HDR
+- **Realism level:** full photorealistic render, indistinguishable from a real luxury product photograph
+- **Focal pull:** the specular highlight where the key light catches the object's primary material surface
+
+#### Variation C — Stylized / Roblox-native
+- **Composition:** a single simplified item icon inside a clean rounded card frame, still built around generous negative space even in a flatter style
+- **Camera angle:** flat HUD-facing view with a very slight, slow implied rotation of the item within its frame
+- **Framing:** the item sits small and centered within a noticeably larger, mostly empty rounded panel, honoring the same restraint in Roblox's flatter visual language
+- **UI layout:** a single dark rounded rectangular card (UICorner, subtle drop shadow) with one item icon centered inside and a thin single-color accent border
+- **Lighting:** a soft, simple gradient across the card background suggesting depth without literal material lighting simulation
+- **Materials:** smooth, slightly glossy flat-shaded material with one clean highlight band, simplified but still legibly "premium" relative to standard Roblox item icons
+- **Typography:** a single small, refined (not bold/chunky) sans-serif label, deliberately quieter than typical Roblox UI text
+- **Glow:** a very faint, thin outline glow in the single accent color, restrained rather than radiant
+- **Particles:** none — the absence of particles is itself the signal, same as the other two variations
+- **Implied motion:** a slow, minimal rotation caught mid-turn, otherwise still
+- **Emotional atmosphere:** elevated and calm relative to the rest of a typically bright, energetic Roblox UI — meant to visibly stand apart from common-rarity items
+- **Color palette:** muted dark background with a single restrained metallic or jewel-tone accent, deliberately less saturated than typical Roblox UI
+- **Realism level:** flat-shaded stylized 3D consistent with Roblox rendering, but with unusually disciplined restraint compared to typical Roblox UI energy
+- **Focal pull:** the single accent-colored border line framing the otherwise quiet card
+
+#### Negative Prompt
+No particles of any kind; no bright bursts or flashes; no confetti or
+sparkle showers; no busy or saturated multi-color palette; no crowded
+composition; no more than one accent color; no fast or bouncy implied
+motion; no cartoonish proportions; no cluttered typography; no
+overexposed or blown-out highlights; no generic mobile-game UI framing;
+no visual noise filling the negative space — the empty space must stay
+empty.
 
 ---
 
@@ -383,19 +534,66 @@ A single guaranteed reward with no variance. Staging suspense around a
 certain outcome reads as a lie the moment the player notices there was
 never any doubt.
 
-### AI Image Prompt
-> A trading card pack opening UI concept for a video game, a glossy foil
-> card mid-flip rotating on its vertical axis against a dark gradient
-> background, a bright purple-to-gold rarity glow emanating from behind
-> the card silhouette before its artwork is fully visible, sharp graphic
-> light rays radiating outward in a starburst pattern, holographic foil
-> shimmer texture across the card surface, a small rarity gem icon in the
-> corner already visible and glowing, other unopened cards blurred in the
-> background suggesting more to come, vivid saturated purple and gold
-> color scheme with sharp graphic contrast, dynamic diagonal composition
-> suggesting motion and suspense, mobile gacha game aesthetic, crisp
-> vector-illustrated style with foil highlights, energetic and
-> anticipatory mood
+### Visual Exploration — Three Image Prompts
+
+#### Variation A — Faithful
+- **Composition:** a glossy card centered mid-flip, rotating on its vertical axis, dark gradient background behind it
+- **Camera angle:** straight-on frontal, as if the card were being held up directly to the viewer
+- **Framing:** medium-close, card fills roughly half the frame with room for its rarity glow to radiate outward
+- **UI layout:** card silhouette plus a small rarity-tier gem/icon already visible in one corner, other unopened cards softly blurred in the background
+- **Lighting:** sharp graphic light rays radiating outward in a starburst pattern from behind the card
+- **Materials:** holographic foil surface with a visible shimmer/rainbow sheen catching the light at the current rotation angle
+- **Typography:** none yet resolved on the card face — reveal still in progress
+- **Glow:** a bright tier-colored glow (purple-to-gold gradient) emanating from directly behind the card silhouette
+- **Particles:** none beyond the graphic light rays — the light itself carries the energy, not floating particles
+- **Implied motion:** card caught mid-rotation, motion blur on its leading edge, clearly still turning
+- **Emotional atmosphere:** anticipatory, energetic, suspenseful — the exact instant before knowing
+- **Color palette:** dark background, vivid saturated purple-to-gold rarity gradient, sharp graphic contrast
+- **Realism level:** crisp vector-illustrated style with foil highlight rendering, not photoreal
+- **Focal pull:** the rarity-gem icon already glowing in the corner, drawing the eye before the card face is even readable
+
+#### Variation B — Premium / AAA
+- **Composition:** the same mid-flip card within a fuller cinematic environment — a dark reflective table or pedestal surface beneath it, other cards softly visible around it
+- **Camera angle:** a slight dynamic low angle with a subtle dolly move implied, adding weight to the flip
+- **Framing:** tighter, more dramatic close-up on the card's leading edge as it catches the light mid-turn
+- **UI layout:** a physical card object in a believable lit environment rather than flat graphic space, other packs/cards realistically scattered nearby
+- **Lighting:** realistic studio-quality rim lighting plus a true holographic diffraction effect across the foil, catching multiple colors as it turns
+- **Materials:** physically accurate foil card stock — visible card thickness, slightly worn edges, real light diffraction across the holographic layer
+- **Typography:** a partially legible embossed rarity label beginning to catch light, foil-stamped rather than flat-printed
+- **Glow:** full volumetric colored glow with real light scatter through implied atmospheric haze
+- **Particles:** a few fine light-catching dust motes in the beam, barely visible, purely atmospheric
+- **Implied motion:** strong motion blur on the fastest-moving edge of the card, a realistic sense of weight and inertia in the flip
+- **Emotional atmosphere:** high-stakes, cinematic suspense — the scale of a AAA loot-reveal cutscene
+- **Color palette:** rich saturated purple-to-gold with true HDR highlights, deep neutral shadow tones
+- **Realism level:** photoreal cinematic render with accurate material physics
+- **Focal pull:** the point of sharpest holographic diffraction on the card's surface, mid-turn
+
+#### Variation C — Stylized / Roblox-native
+- **Composition:** a chunky, simplified card or capsule icon opening, bold flat shapes, centered in frame
+- **Camera angle:** flat HUD-facing view, matching a mobile/PC gacha-pull screen
+- **Framing:** card or capsule fills a large central UI panel, rounded corners, clean edges
+- **UI layout:** a rounded rectangular reveal panel (UICorner) with a bold tier-colored border already visible, capsule halves splitting open beside it
+- **Lighting:** bright, flat, graphic light burst behind the panel — simple radial gradient rather than physical light simulation
+- **Materials:** smooth glossy flat-shaded plastic-like capsule material, simplified foil suggested through a simple diagonal shine band rather than true holography
+- **Typography:** bold, chunky, high-contrast rounded sans-serif rarity label ("RARE" / "EPIC"-style), unmistakably legible at a glance
+- **Glow:** a bold, saturated flat-colored glow ring matching the rarity tier, graphic rather than atmospheric
+- **Particles:** bright simple star/sparkle shapes bursting outward in a clean, toy-like radial pattern
+- **Implied motion:** a bouncy pop-open motion, capsule halves still visibly separating
+- **Emotional atmosphere:** bright, exciting, immediately legible — built for a broad, young audience used to reading rarity tiers instantly
+- **Color palette:** bold saturated tier colors (bright purple/gold) against a clean dark or gradient backdrop
+- **Realism level:** flat-shaded stylized 3D, unmistakably a Roblox gacha/capsule UI rather than a trading-card render
+- **Focal pull:** the bold rarity-colored border and burst, readable before any other detail
+
+#### Negative Prompt
+No fully resolved item artwork visible (the suspense must remain
+intact); no muted or desaturated color grading; no slow or ceremonial
+pacing; no single flat lighting with no directional rays; no cluttered
+background unrelated to the pack/card motif; no generic treasure-chest
+clichés; no unreadable or illegible rarity labeling; no random unrelated
+particles unconnected to the light-ray motif; no low-contrast tier colors
+that could be confused with each other; no photograph-real physical
+trading cards outside of Variation B, where physical card realism is the
+explicit point.
 
 ---
 
@@ -487,19 +685,66 @@ Single-player content, anything personal or private in nature, or any
 reward common enough that broadcasting it constantly would fatigue
 everyone else on the server.
 
-### AI Image Prompt
-> A multiplayer video game broadcast-style achievement banner UI, a bold
-> wide horizontal banner sliding in from the top of a busy in-game HUD,
-> large bright player name and avatar icon on the left in team-colored
-> high-contrast lettering, a glowing trophy or medal icon on the right
-> side of the banner, sharp diagonal light streaks behind the banner
-> suggesting motion and energy, saturated red gold and white
-> sports-broadcast color palette, small blurred killfeed-style entries
-> stacking below the main banner, other players' HUD elements faintly
-> visible in the background suggesting a live multiplayer match, bold
-> condensed sans-serif typography, energetic esports broadcast graphic
-> style, high contrast and legible at a glance, dynamic motion-blur trail
-> on the banner's entry animation, competitive and public mood
+### Visual Exploration — Three Image Prompts
+
+#### Variation A — Faithful
+- **Composition:** a wide horizontal banner sliding in from the top edge of a busy in-game HUD
+- **Camera angle:** standard first/third-person gameplay HUD view, banner overlaid across the top
+- **Framing:** full HUD width, banner is a thin horizontal strip rather than a centered card
+- **UI layout:** player name and avatar icon on the left in bold team-colored lettering, a glowing trophy/medal icon on the right, small blurred killfeed-style entries stacking below
+- **Lighting:** flat, bright, high-contrast broadcast-style lighting, no soft ambient falloff
+- **Materials:** flat graphic banner material, sharp clean edges, no texture detail
+- **Typography:** bold condensed sans-serif, high legibility at a glance, team-colored
+- **Glow:** a moderate glow around the trophy/medal icon only, not the whole banner
+- **Particles:** none beyond sharp diagonal graphic light streaks behind the banner suggesting motion and energy
+- **Implied motion:** the banner caught mid-slide-in, a motion-blur trail on its leading edge
+- **Emotional atmosphere:** public, energetic, slightly urgent — an announcement meant to be noticed
+- **Color palette:** saturated red, gold, and white sports-broadcast palette, high contrast
+- **Realism level:** crisp graphic UI illustration, esports-broadcast style, not photoreal
+- **Focal pull:** the player's name in bold team-color lettering, immediately followed by the trophy icon
+
+#### Variation B — Premium / AAA
+- **Composition:** the banner integrated into a fuller cinematic scene — other players' silhouettes faintly visible in a populated environment behind the HUD
+- **Camera angle:** a brief cinematic cut implied — as if the camera pulled from first-person to a spectator angle to catch the moment for other viewers
+- **Framing:** wider shot showing the banner in context of a live, populated multiplayer match, environmental lighting and depth visible behind the HUD layer
+- **UI layout:** the same name-forward banner structure, rendered with broadcast-quality graphic polish — a real esports tournament overlay
+- **Lighting:** realistic environmental lighting behind the HUD layer, combined with a crisp, high-production broadcast graphic lighting treatment on the banner itself
+- **Materials:** glossy, high-gloss broadcast graphic material with subtle chromatic/metallic accents on the trophy icon, realistic light reflection on the icon's surface
+- **Typography:** precisely kerned condensed display typography with a subtle metallic or embossed treatment, broadcast-network quality
+- **Glow:** a brighter, more controlled HDR glow on the medal/trophy icon, with believable light bloom against the darker environmental background
+- **Particles:** fine light streak trails and a subtle lens-flare-adjacent light burst at the trophy icon, used sparingly and precisely
+- **Implied motion:** strong directional motion blur across the whole banner and background, selling real broadcast camera-cut energy
+- **Emotional atmosphere:** full esports-broadcast spectacle — the scale and polish of a real televised tournament moment
+- **Color palette:** saturated red/gold/white with true HDR highlight values, deep environmental background tones behind
+- **Realism level:** photoreal environmental background with cinematic graphic-overlay UI, broadcast-production quality
+- **Focal pull:** the trophy icon's HDR glow, immediately followed by the bold player name
+
+#### Variation C — Stylized / Roblox-native
+- **Composition:** a bold, chunky rounded banner sliding in, matching Roblox's typical rounded-rectangle UI panel style
+- **Camera angle:** standard flat Roblox gameplay HUD view, banner overlaid at the top of the screen
+- **Framing:** full-width rounded banner, simplified and friendly rather than sharp-edged broadcast graphics
+- **UI layout:** rounded avatar headshot icon on the left (Roblox-style player thumbnail), bold name text beside it, a simple trophy/star icon on the right inside a rounded pill-shaped banner
+- **Lighting:** bright, flat, cheerful lighting typical of Roblox UI, no dramatic shadow or environmental depth
+- **Materials:** smooth glossy flat-shaded plastic-like banner material, simple and toy-like
+- **Typography:** bold, rounded, friendly sans-serif (Builder Sans-style), very high legibility, slightly playful rather than aggressive
+- **Glow:** a simple bright rim-glow around the trophy/star icon, graphic rather than photographic
+- **Particles:** a few simple bright star or spark shapes bursting near the trophy icon, small and quick
+- **Implied motion:** a bouncy slide-and-settle motion, banner caught just past its landing bounce
+- **Emotional atmosphere:** fun, communal, celebratory — built for a broad, young, social audience rather than competitive intensity
+- **Color palette:** bright saturated Roblox-typical colors (blue, gold, white), high contrast but friendly rather than aggressive
+- **Realism level:** flat-shaded stylized UI, unmistakably a Roblox social/achievement banner
+- **Focal pull:** the rounded avatar thumbnail and name together, read as one friendly unit before the trophy icon
+
+#### Negative Prompt
+No private or intimate single-player framing; no muted or desaturated
+color grading; no slow or ceremonial pacing; no small or hard-to-read
+text at a glance; no cluttered or illegible banner layout; no absence of
+player identity (name/avatar must always be present and prominent); no
+soft diffused lighting (this philosophy is bold and graphic, not
+atmospheric); no random unrelated particles unconnected to the
+trophy/medal motif; no generic mobile-game UI framing; no empty,
+unpopulated background — a sense of other players or a live audience
+must be implied, even faintly.
 
 ---
 

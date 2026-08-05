@@ -128,8 +128,9 @@ evidence could even start being gathered.
   a committee process — nothing here asks for one.
 - **Zero deviation from the Visual Concept Review's exact renders.** The
   Gold Direction is explicitly allowed to pick and simplify — see
-  `RWD-001_GOLD_DIRECTION.md` choosing Variation A over B and C outright,
-  and `NTF-001`'s own Gold Direction doing the same.
+  `Benchmarks/003_Reward_Reveal/GOLD_DIRECTION.md` choosing Variation A
+  over B and C outright, and `NTF-001`'s own Gold Direction doing the
+  same.
 - **New documentation for every subsequent tweak.** See Question 4 — a
   properly scoped polish pass doesn't need its own Gold Direction
   rewrite.

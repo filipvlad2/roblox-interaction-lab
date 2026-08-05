@@ -32,8 +32,11 @@ local OVERSHOOT_SHARE = 0.6
 local OVERSHOOT_DURATION = SNAP_DURATION * OVERSHOOT_SHARE
 local SETTLE_DURATION = SNAP_DURATION - OVERSHOOT_DURATION
 
+-- Studio playtest polish: the flash now hits fully opaque (was 0.1) instead
+-- of already slightly faded on arrival - same duration, a harder first
+-- instant. See the "SNAP / IMPACT" polish pass for the full reasoning.
 local FLASH_DURATION = 0.1
-local FLASH_PEAK_TRANSPARENCY = 0.1
+local FLASH_PEAK_TRANSPARENCY = 0.0
 local PARTICLE_DURATION = 0.14
 local PARTICLE_COUNT = 6
 local PARTICLE_TRAVEL_DISTANCE = 26
@@ -165,6 +168,11 @@ return {
 			flash.Visible = false
 			flash.BackgroundTransparency = 1
 
+			-- Reset the counter's absorption tint from the previous play, if
+			-- any - see the dock tween below for why it holds this color
+			-- instead of animating back on its own.
+			counter.BackgroundColor3 = Theme.Colors.PanelAlt
+
 			for _, child in ipairs(effectContainer:GetChildren()) do
 				if child.Name == "Particle" then
 					child:Destroy()
@@ -218,10 +226,18 @@ return {
 			sound:Play()
 			spawnParticles()
 
-			local flashInfo = TweenInfo.new(FLASH_DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+			-- Cubic instead of Quad: a steeper decay so the light reads as
+			-- "gone" more abruptly, same duration - a camera flash, not a
+			-- fade. Studio playtest polish, see "SNAP / IMPACT" above.
+			local flashInfo = TweenInfo.new(FLASH_DURATION, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out)
 			tweenProperty(flash, flashInfo, { BackgroundTransparency = 1 })
 
-			local overshootInfo = TweenInfo.new(OVERSHOOT_DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+			-- Cubic instead of Quad on the rise only: a steeper, more decisive
+			-- arrival at the overshoot peak - same OVERSHOOT_DURATION, no
+			-- change to how big the overshoot is. The settle stays Quad Out
+			-- deliberately; only the impact itself needed to feel harder, not
+			-- the resolution after it.
+			local overshootInfo = TweenInfo.new(OVERSHOOT_DURATION, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out)
 			local settleInfo = TweenInfo.new(SETTLE_DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 			local peakSize = UDim2.fromOffset(ICON_DIAMETER * ICON_PEAK_SCALE, ICON_DIAMETER * ICON_PEAK_SCALE)
 			local restSize = UDim2.fromOffset(ICON_DIAMETER * ICON_REST_SCALE, ICON_DIAMETER * ICON_REST_SCALE)
@@ -251,6 +267,18 @@ return {
 						Size = UDim2.fromOffset(COUNTER_DIAMETER * 0.5, COUNTER_DIAMETER * 0.5),
 						BackgroundTransparency = 1,
 					})
+
+					-- Studio playtest polish: the counter itself now takes on
+					-- the icon's own color as the icon arrives, using the exact
+					-- same dockInfo timing so this adds no new duration - the
+					-- two tweens start and finish together. This is what turns
+					-- "an object traveling to another object" into "the value
+					-- becoming part of the counter": the counter visibly
+					-- receives the color, rather than sitting inert while the
+					-- icon vanishes near it. It stays tinted until the next
+					-- setIdleState() call, as a small persisting trace of the
+					-- reward it just took in.
+					tweenProperty(counter, dockInfo, { BackgroundColor3 = Theme.Colors.AccentAlt })
 					dockTween.Completed:Connect(function(dockPlaybackState)
 						if generation ~= state.Generation or dockPlaybackState ~= Enum.PlaybackState.Completed then
 							return

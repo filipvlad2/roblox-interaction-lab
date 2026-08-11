@@ -11,6 +11,9 @@
       "StarterPlayerScripts": {
         "LabBootstrap": {
           "$path": "bootstrap/LabBootstrap.client.lua"
+        },
+        "GrassPatch": {
+          "$path": "bootstrap/GrassPatch.client.lua"
         }
       }
     }

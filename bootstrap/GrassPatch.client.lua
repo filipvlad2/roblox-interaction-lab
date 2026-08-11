@@ -2,12 +2,18 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
-local GRASS_PART_NAME = "1f56"
+local GRASS_NAME_FRAGMENT = "1f56"
 local LEAN_ANGLE_DEGREES = 18
 local LEAN_TIME = 0.12
 local RETURN_TIME = 0.45
 
 local localPlayer = Players.LocalPlayer
+
+-- Grass part names come from a mesh import (e.g. "Part|1f56"), not the bare
+-- fragment, so match on substring rather than exact equality.
+local function isGrassPart(name)
+	return string.find(name, GRASS_NAME_FRAGMENT, 1, true) ~= nil
+end
 
 local function setupGrassPart(part)
 	if not part:IsA("BasePart") then
@@ -83,14 +89,14 @@ end
 -- Grass parts are nested under folders/models, not direct children of
 -- Workspace, so every existing "1f56" part in the whole tree is wired up...
 for _, descendant in ipairs(Workspace:GetDescendants()) do
-	if descendant.Name == GRASS_PART_NAME then
+	if isGrassPart(descendant.Name) then
 		setupGrassPart(descendant)
 	end
 end
 
 -- ...and any added later (e.g. streamed in) are picked up as they appear.
 Workspace.DescendantAdded:Connect(function(descendant)
-	if descendant.Name == GRASS_PART_NAME then
+	if isGrassPart(descendant.Name) then
 		setupGrassPart(descendant)
 	end
 end)

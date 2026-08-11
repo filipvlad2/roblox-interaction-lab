@@ -25,6 +25,10 @@ local function setupGrassPart(part)
 	part.Anchored = true
 
 	local baseCFrame = part.CFrame
+	-- Pivot at the bottom face (assumes the blade stands upright along its
+	-- own local Y axis), so rotating around it leaves the base in place and
+	-- only the top of the part swings.
+	local pivotPoint = (baseCFrame * CFrame.new(0, -part.Size.Y / 2, 0)).Position
 	local debounce = false
 	local leanTween, returnTween
 
@@ -37,7 +41,8 @@ local function setupGrassPart(part)
 		end
 
 		local tiltAxis = Vector3.new(-awayDirection.Z, 0, awayDirection.X)
-		local leanCFrame = baseCFrame * CFrame.fromAxisAngle(tiltAxis, math.rad(LEAN_ANGLE_DEGREES))
+		local rotation = CFrame.fromAxisAngle(tiltAxis, math.rad(LEAN_ANGLE_DEGREES))
+		local leanCFrame = CFrame.new(pivotPoint) * rotation * CFrame.new(-pivotPoint) * baseCFrame
 
 		leanTween = TweenService:Create(
 			part,

@@ -125,7 +125,7 @@ local MID_LEAN_ANGLE_DEGREES = 30
 local TIP_EXTRA_LEAN_ANGLE_DEGREES = 20
 local DENSE_LEAN_TIME = 0.12
 local DENSE_RETURN_TIME = 0.45
-local BEND_RADIUS_STUDS = 4
+local BEND_RADIUS_STUDS = 2
 local PROXIMITY_CHECK_INTERVAL = 0.1
 
 local function setupDenseGrassPatch(meshPart)
@@ -225,21 +225,14 @@ local function setupDenseGrassPatch(meshPart)
 		accumulated = 0
 
 		local character = localPlayer.Character
-		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 		local rootPart = character and character:FindFirstChild("HumanoidRootPart")
 
 		-- One shared lean direction per tick: the way the character is
-		-- currently walking, or the way it's facing if it's standing still.
+		-- facing, whether it's walking that way or just standing still.
 		local localTiltAxis
-		if humanoid and rootPart then
-			local moveDirection = humanoid.MoveDirection
-			local leanDirection
-			if moveDirection.Magnitude > 0.1 then
-				leanDirection = Vector3.new(moveDirection.X, 0, moveDirection.Z).Unit
-			else
-				local lookVector = rootPart.CFrame.LookVector
-				leanDirection = Vector3.new(lookVector.X, 0, lookVector.Z).Unit
-			end
+		if rootPart then
+			local lookVector = rootPart.CFrame.LookVector
+			local leanDirection = Vector3.new(lookVector.X, 0, lookVector.Z).Unit
 			local worldTiltAxis = Vector3.new(-leanDirection.Z, 0, leanDirection.X)
 			localTiltAxis = meshPart.CFrame:VectorToObjectSpace(worldTiltAxis).Unit
 		end

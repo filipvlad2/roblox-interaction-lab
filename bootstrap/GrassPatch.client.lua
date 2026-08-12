@@ -116,8 +116,12 @@ end)
 
 local DENSE_GRASS_ROOT_NAME = "DenseGrass_Skinned_Roblox"
 local DENSE_GRASS_MESH_NAME = "DenseGrass_Skinned"
-local MID_LEAN_ANGLE_DEGREES = 25
-local TIP_EXTRA_LEAN_ANGLE_DEGREES = 15
+-- Cumulative (Root + Mid + Tip) lands near 90 deg: rotating Root still
+-- pivots at its own origin, so the ground-contact point stays put even
+-- though the whole visible blade above it sweeps down.
+local ROOT_LEAN_ANGLE_DEGREES = 40
+local MID_LEAN_ANGLE_DEGREES = 30
+local TIP_EXTRA_LEAN_ANGLE_DEGREES = 20
 local DENSE_LEAN_TIME = 0.12
 local DENSE_RETURN_TIME = 0.45
 local BEND_RADIUS_STUDS = 4
@@ -138,6 +142,7 @@ local function setupDenseGrassPatch(meshPart)
 				local tip = mid and mid:FindFirstChild(prefix .. "_Tip")
 				if mid and tip then
 					table.insert(blades, {
+						root = bone,
 						mid = mid,
 						tip = tip,
 						rootWorldPosition = bone.WorldPosition,
@@ -151,9 +156,15 @@ local function setupDenseGrassPatch(meshPart)
 	print(string.format("GrassPatch: DenseGrass_Skinned wired up with %d blades", #blades))
 
 	local function playBladeLean(blade, localTiltAxis)
+		local rootLean = CFrame.fromAxisAngle(localTiltAxis, math.rad(ROOT_LEAN_ANGLE_DEGREES))
 		local midLean = CFrame.fromAxisAngle(localTiltAxis, math.rad(MID_LEAN_ANGLE_DEGREES))
 		local tipLean = CFrame.fromAxisAngle(localTiltAxis, math.rad(TIP_EXTRA_LEAN_ANGLE_DEGREES))
 
+		local rootLeanTween = TweenService:Create(
+			blade.root,
+			TweenInfo.new(DENSE_LEAN_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+			{ Transform = rootLean }
+		)
 		local midLeanTween = TweenService:Create(
 			blade.mid,
 			TweenInfo.new(DENSE_LEAN_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
@@ -165,11 +176,16 @@ local function setupDenseGrassPatch(meshPart)
 			{ Transform = tipLean }
 		)
 
-		midLeanTween.Completed:Connect(function(playbackState)
+		rootLeanTween.Completed:Connect(function(playbackState)
 			if playbackState ~= Enum.PlaybackState.Completed then
 				blade.debounce = false
 				return
 			end
+			local rootReturnTween = TweenService:Create(
+				blade.root,
+				TweenInfo.new(DENSE_RETURN_TIME, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+				{ Transform = CFrame.new() }
+			)
 			local midReturnTween = TweenService:Create(
 				blade.mid,
 				TweenInfo.new(DENSE_RETURN_TIME, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
@@ -181,14 +197,16 @@ local function setupDenseGrassPatch(meshPart)
 				{ Transform = CFrame.new() }
 			)
 			tipReturnTween:Play()
-			midReturnTween.Completed:Connect(function()
+			midReturnTween:Play()
+			rootReturnTween.Completed:Connect(function()
 				blade.debounce = false
 			end)
-			midReturnTween:Play()
+			rootReturnTween:Play()
 		end)
 
 		tipLeanTween:Play()
 		midLeanTween:Play()
+		rootLeanTween:Play()
 	end
 
 	local sweepOnCooldown = false

@@ -125,6 +125,9 @@ local TOUCH_SWEEP_COOLDOWN = 0.1
 
 local function setupDenseGrassPatch(meshPart)
 	meshPart.Anchored = true
+	-- Without this, a mesh with Touched events disabled (common on dense
+	-- decorative meshes, to save performance) would never fire at all.
+	meshPart.CanTouch = true
 
 	local blades = {}
 	for _, bone in ipairs(meshPart:GetChildren()) do
@@ -144,6 +147,8 @@ local function setupDenseGrassPatch(meshPart)
 			end
 		end
 	end
+
+	print(string.format("GrassPatch: DenseGrass_Skinned wired up with %d blades", #blades))
 
 	local function playBladeLean(blade, localTiltAxis)
 		local midLean = CFrame.fromAxisAngle(localTiltAxis, math.rad(MID_LEAN_ANGLE_DEGREES))
@@ -227,10 +232,20 @@ local function setupDenseGrassPatch(meshPart)
 	end)
 end
 
-local denseGrassRoot = Workspace:FindFirstChild(DENSE_GRASS_ROOT_NAME)
-if denseGrassRoot then
-	local denseGrassMesh = denseGrassRoot:FindFirstChild(DENSE_GRASS_MESH_NAME)
-	if denseGrassMesh then
-		setupDenseGrassPatch(denseGrassMesh)
+-- FindFirstChild would silently find nothing if this ran before the model
+-- had replicated in; WaitForChild yields for it instead of giving up.
+task.spawn(function()
+	local denseGrassRoot = Workspace:WaitForChild(DENSE_GRASS_ROOT_NAME, 10)
+	if not denseGrassRoot then
+		warn("GrassPatch: " .. DENSE_GRASS_ROOT_NAME .. " not found in Workspace after 10s")
+		return
 	end
-end
+
+	local denseGrassMesh = denseGrassRoot:WaitForChild(DENSE_GRASS_MESH_NAME, 10)
+	if not denseGrassMesh then
+		warn("GrassPatch: " .. DENSE_GRASS_MESH_NAME .. " not found under " .. DENSE_GRASS_ROOT_NAME .. " after 10s")
+		return
+	end
+
+	setupDenseGrassPatch(denseGrassMesh)
+end)

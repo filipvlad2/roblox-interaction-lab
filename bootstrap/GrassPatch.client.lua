@@ -255,20 +255,26 @@ local function setupDenseGrassPatch(meshPart)
 	end)
 end
 
--- FindFirstChild would silently find nothing if this ran before the model
--- had replicated in; WaitForChild yields for it instead of giving up.
-task.spawn(function()
-	local denseGrassRoot = Workspace:WaitForChild(DENSE_GRASS_ROOT_NAME, 10)
-	if not denseGrassRoot then
-		warn("GrassPatch: " .. DENSE_GRASS_ROOT_NAME .. " not found in Workspace after 10s")
-		return
-	end
-
-	local denseGrassMesh = denseGrassRoot:WaitForChild(DENSE_GRASS_MESH_NAME, 10)
+-- There can be many DenseGrass_Skinned_Roblox copies (Roblox doesn't require
+-- sibling names to be unique), so every one gets wired up independently,
+-- both ones already in Workspace and ones placed/streamed in afterward.
+local function setupDenseGrassRoot(root)
+	local denseGrassMesh = root:WaitForChild(DENSE_GRASS_MESH_NAME, 10)
 	if not denseGrassMesh then
-		warn("GrassPatch: " .. DENSE_GRASS_MESH_NAME .. " not found under " .. DENSE_GRASS_ROOT_NAME .. " after 10s")
+		warn("GrassPatch: " .. DENSE_GRASS_MESH_NAME .. " not found under " .. root:GetFullName() .. " after 10s")
 		return
 	end
-
 	setupDenseGrassPatch(denseGrassMesh)
+end
+
+for _, descendant in ipairs(Workspace:GetDescendants()) do
+	if descendant.Name == DENSE_GRASS_ROOT_NAME then
+		task.spawn(setupDenseGrassRoot, descendant)
+	end
+end
+
+Workspace.DescendantAdded:Connect(function(descendant)
+	if descendant.Name == DENSE_GRASS_ROOT_NAME then
+		task.spawn(setupDenseGrassRoot, descendant)
+	end
 end)

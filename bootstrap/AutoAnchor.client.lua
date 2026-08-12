@@ -21,8 +21,28 @@ local function anchorIfEligible(instance)
 	end
 end
 
-for _, descendant in ipairs(Workspace:GetDescendants()) do
-	anchorIfEligible(descendant)
+-- Also guards against anything unanchoring one of these parts later (another
+-- script, a manual edit in Studio): it gets forced back to true immediately,
+-- unless the part has since become part of a character (e.g. a tool that
+-- started as scenery and got picked up).
+local function watchForUnanchoring(instance)
+	if not instance:IsA("BasePart") then
+		return
+	end
+	instance:GetPropertyChangedSignal("Anchored"):Connect(function()
+		if not instance.Anchored and not isPartOfCharacter(instance) then
+			instance.Anchored = true
+		end
+	end)
 end
 
-Workspace.DescendantAdded:Connect(anchorIfEligible)
+local function setupPart(instance)
+	anchorIfEligible(instance)
+	watchForUnanchoring(instance)
+end
+
+for _, descendant in ipairs(Workspace:GetDescendants()) do
+	setupPart(descendant)
+end
+
+Workspace.DescendantAdded:Connect(setupPart)

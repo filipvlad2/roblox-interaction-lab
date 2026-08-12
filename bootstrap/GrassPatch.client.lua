@@ -1,4 +1,5 @@
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
@@ -125,13 +126,10 @@ local TIP_EXTRA_LEAN_ANGLE_DEGREES = 20
 local DENSE_LEAN_TIME = 0.12
 local DENSE_RETURN_TIME = 0.45
 local BEND_RADIUS_STUDS = 4
-local TOUCH_SWEEP_COOLDOWN = 0.1
+local PROXIMITY_CHECK_INTERVAL = 0.1
 
 local function setupDenseGrassPatch(meshPart)
 	meshPart.Anchored = true
-	-- Without this, a mesh with Touched events disabled (common on dense
-	-- decorative meshes, to save performance) would never fire at all.
-	meshPart.CanTouch = true
 
 	local blades = {}
 	for _, bone in ipairs(meshPart:GetChildren()) do
@@ -146,7 +144,8 @@ local function setupDenseGrassPatch(meshPart)
 						mid = mid,
 						tip = tip,
 						rootWorldPosition = bone.WorldPosition,
-						debounce = false,
+						state = "idle", -- "idle" | "leaning" | "bent" | "returning"
+						tweens = {},
 					})
 				end
 			end
@@ -155,96 +154,99 @@ local function setupDenseGrassPatch(meshPart)
 
 	print(string.format("GrassPatch: DenseGrass_Skinned wired up with %d blades", #blades))
 
-	local function playBladeLean(blade, localTiltAxis)
+	local function cancelTweens(blade)
+		for _, tween in pairs(blade.tweens) do
+			tween:Cancel()
+		end
+		blade.tweens = {}
+	end
+
+	-- Bends the blade and holds it there (doesn't auto-return); the
+	-- proximity sweep below is what decides when to call setBladeUpright.
+	local function setBladeBent(blade, localTiltAxis)
+		if blade.state == "leaning" or blade.state == "bent" then
+			return
+		end
+		cancelTweens(blade)
+		blade.state = "leaning"
+
 		local rootLean = CFrame.fromAxisAngle(localTiltAxis, math.rad(ROOT_LEAN_ANGLE_DEGREES))
 		local midLean = CFrame.fromAxisAngle(localTiltAxis, math.rad(MID_LEAN_ANGLE_DEGREES))
 		local tipLean = CFrame.fromAxisAngle(localTiltAxis, math.rad(TIP_EXTRA_LEAN_ANGLE_DEGREES))
+		local tweenInfo = TweenInfo.new(DENSE_LEAN_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 
-		local rootLeanTween = TweenService:Create(
-			blade.root,
-			TweenInfo.new(DENSE_LEAN_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-			{ Transform = rootLean }
-		)
-		local midLeanTween = TweenService:Create(
-			blade.mid,
-			TweenInfo.new(DENSE_LEAN_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-			{ Transform = midLean }
-		)
-		local tipLeanTween = TweenService:Create(
-			blade.tip,
-			TweenInfo.new(DENSE_LEAN_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-			{ Transform = tipLean }
-		)
+		blade.tweens.root = TweenService:Create(blade.root, tweenInfo, { Transform = rootLean })
+		blade.tweens.mid = TweenService:Create(blade.mid, tweenInfo, { Transform = midLean })
+		blade.tweens.tip = TweenService:Create(blade.tip, tweenInfo, { Transform = tipLean })
 
-		rootLeanTween.Completed:Connect(function(playbackState)
-			if playbackState ~= Enum.PlaybackState.Completed then
-				blade.debounce = false
-				return
+		blade.tweens.root.Completed:Connect(function(playbackState)
+			if playbackState == Enum.PlaybackState.Completed and blade.state == "leaning" then
+				blade.state = "bent"
 			end
-			local rootReturnTween = TweenService:Create(
-				blade.root,
-				TweenInfo.new(DENSE_RETURN_TIME, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
-				{ Transform = CFrame.new() }
-			)
-			local midReturnTween = TweenService:Create(
-				blade.mid,
-				TweenInfo.new(DENSE_RETURN_TIME, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
-				{ Transform = CFrame.new() }
-			)
-			local tipReturnTween = TweenService:Create(
-				blade.tip,
-				TweenInfo.new(DENSE_RETURN_TIME, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
-				{ Transform = CFrame.new() }
-			)
-			tipReturnTween:Play()
-			midReturnTween:Play()
-			rootReturnTween.Completed:Connect(function()
-				blade.debounce = false
-			end)
-			rootReturnTween:Play()
 		end)
 
-		tipLeanTween:Play()
-		midLeanTween:Play()
-		rootLeanTween:Play()
+		blade.tweens.tip:Play()
+		blade.tweens.mid:Play()
+		blade.tweens.root:Play()
 	end
 
-	local sweepOnCooldown = false
-
-	meshPart.Touched:Connect(function(hit)
-		local character = hit.Parent
-		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-		if not humanoid or character ~= localPlayer.Character then
+	local function setBladeUpright(blade)
+		if blade.state == "idle" or blade.state == "returning" then
 			return
 		end
+		cancelTweens(blade)
+		blade.state = "returning"
 
-		if sweepOnCooldown then
-			return
-		end
-		sweepOnCooldown = true
-		task.delay(TOUCH_SWEEP_COOLDOWN, function()
-			sweepOnCooldown = false
+		local tweenInfo = TweenInfo.new(DENSE_RETURN_TIME, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
+		blade.tweens.root = TweenService:Create(blade.root, tweenInfo, { Transform = CFrame.new() })
+		blade.tweens.mid = TweenService:Create(blade.mid, tweenInfo, { Transform = CFrame.new() })
+		blade.tweens.tip = TweenService:Create(blade.tip, tweenInfo, { Transform = CFrame.new() })
+
+		blade.tweens.root.Completed:Connect(function(playbackState)
+			if playbackState == Enum.PlaybackState.Completed and blade.state == "returning" then
+				blade.state = "idle"
+			end
 		end)
 
-		local rootPart = character:FindFirstChild("HumanoidRootPart")
-		if not rootPart then
+		blade.tweens.tip:Play()
+		blade.tweens.mid:Play()
+		blade.tweens.root:Play()
+	end
+
+	-- Runs a few times a second (not every frame) rather than reacting to
+	-- Touched, so a blade stays bent for as long as the player lingers in
+	-- range and only springs back once they actually step away.
+	local accumulated = 0
+	RunService.Heartbeat:Connect(function(dt)
+		accumulated += dt
+		if accumulated < PROXIMITY_CHECK_INTERVAL then
 			return
 		end
-		local playerPosition = rootPart.Position
+		accumulated = 0
+
+		local character = localPlayer.Character
+		local rootPart = character and character:FindFirstChild("HumanoidRootPart")
 
 		for _, blade in ipairs(blades) do
-			if not blade.debounce then
-				local delta = blade.rootWorldPosition - playerPosition
+			local withinRadius = false
+			local localTiltAxis
+
+			if rootPart then
+				local delta = blade.rootWorldPosition - rootPart.Position
 				local horizontalDelta = Vector3.new(delta.X, 0, delta.Z)
 				if horizontalDelta.Magnitude <= BEND_RADIUS_STUDS then
+					withinRadius = true
 					local awayDirection = horizontalDelta.Magnitude > 0.01 and horizontalDelta.Unit
 						or meshPart.CFrame.LookVector
 					local worldTiltAxis = Vector3.new(-awayDirection.Z, 0, awayDirection.X)
-					local localTiltAxis = meshPart.CFrame:VectorToObjectSpace(worldTiltAxis).Unit
-
-					blade.debounce = true
-					playBladeLean(blade, localTiltAxis)
+					localTiltAxis = meshPart.CFrame:VectorToObjectSpace(worldTiltAxis).Unit
 				end
+			end
+
+			if withinRadius then
+				setBladeBent(blade, localTiltAxis)
+			else
+				setBladeUpright(blade)
 			end
 		end
 	end)

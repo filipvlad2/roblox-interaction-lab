@@ -232,7 +232,9 @@ local function setupDenseGrassPatch(meshPart)
 		local localTiltAxis
 		if rootPart then
 			local lookVector = rootPart.CFrame.LookVector
-			local leanDirection = Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+			-- Negated: this axis convention leans away from the given
+			-- direction, and we want the blades to fall toward LookVector.
+			local leanDirection = -Vector3.new(lookVector.X, 0, lookVector.Z).Unit
 			local worldTiltAxis = Vector3.new(-leanDirection.Z, 0, leanDirection.X)
 			localTiltAxis = meshPart.CFrame:VectorToObjectSpace(worldTiltAxis).Unit
 		end

@@ -15,8 +15,8 @@
         "GrassPatch": {
           "$path": "bootstrap/GrassPatch.client.lua"
         },
-        "TreeAnchor": {
-          "$path": "bootstrap/TreeAnchor.client.lua"
+        "AutoAnchor": {
+          "$path": "bootstrap/AutoAnchor.client.lua"
         }
       }
     }

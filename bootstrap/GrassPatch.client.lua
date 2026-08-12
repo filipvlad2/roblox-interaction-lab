@@ -225,22 +225,32 @@ local function setupDenseGrassPatch(meshPart)
 		accumulated = 0
 
 		local character = localPlayer.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 		local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+
+		-- One shared lean direction per tick: the way the character is
+		-- currently walking, or the way it's facing if it's standing still.
+		local localTiltAxis
+		if humanoid and rootPart then
+			local moveDirection = humanoid.MoveDirection
+			local leanDirection
+			if moveDirection.Magnitude > 0.1 then
+				leanDirection = Vector3.new(moveDirection.X, 0, moveDirection.Z).Unit
+			else
+				local lookVector = rootPart.CFrame.LookVector
+				leanDirection = Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+			end
+			local worldTiltAxis = Vector3.new(-leanDirection.Z, 0, leanDirection.X)
+			localTiltAxis = meshPart.CFrame:VectorToObjectSpace(worldTiltAxis).Unit
+		end
 
 		for _, blade in ipairs(blades) do
 			local withinRadius = false
-			local localTiltAxis
 
 			if rootPart then
 				local delta = blade.rootWorldPosition - rootPart.Position
 				local horizontalDelta = Vector3.new(delta.X, 0, delta.Z)
-				if horizontalDelta.Magnitude <= BEND_RADIUS_STUDS then
-					withinRadius = true
-					local awayDirection = horizontalDelta.Magnitude > 0.01 and horizontalDelta.Unit
-						or meshPart.CFrame.LookVector
-					local worldTiltAxis = Vector3.new(-awayDirection.Z, 0, awayDirection.X)
-					localTiltAxis = meshPart.CFrame:VectorToObjectSpace(worldTiltAxis).Unit
-				end
+				withinRadius = horizontalDelta.Magnitude <= BEND_RADIUS_STUDS
 			end
 
 			if withinRadius then

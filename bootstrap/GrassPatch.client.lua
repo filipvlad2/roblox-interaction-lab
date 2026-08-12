@@ -105,3 +105,132 @@ Workspace.DescendantAdded:Connect(function(descendant)
 		setupGrassPart(descendant)
 	end
 end)
+
+--[[
+	DenseGrass_Skinned: a single skinned MeshPart covering many grass blades.
+	Each blade is a 3-bone chain (<name>_Root -> _Mid -> _Tip, one stud apart).
+	Root is left alone so the base never moves; only Mid (and a smaller extra
+	amount on Tip, for a natural curve) gets rotated, which bends just the
+	upper portion of that blade via skinning.
+]]
+
+local DENSE_GRASS_ROOT_NAME = "DenseGrass_Skinned_Roblox"
+local DENSE_GRASS_MESH_NAME = "DenseGrass_Skinned"
+local MID_LEAN_ANGLE_DEGREES = 25
+local TIP_EXTRA_LEAN_ANGLE_DEGREES = 15
+local DENSE_LEAN_TIME = 0.12
+local DENSE_RETURN_TIME = 0.45
+local BEND_RADIUS_STUDS = 4
+local TOUCH_SWEEP_COOLDOWN = 0.1
+
+local function setupDenseGrassPatch(meshPart)
+	meshPart.Anchored = true
+
+	local blades = {}
+	for _, bone in ipairs(meshPart:GetChildren()) do
+		if bone:IsA("Bone") then
+			local prefix = string.match(bone.Name, "^(.*)_Root$")
+			if prefix then
+				local mid = bone:FindFirstChild(prefix .. "_Mid")
+				local tip = mid and mid:FindFirstChild(prefix .. "_Tip")
+				if mid and tip then
+					table.insert(blades, {
+						mid = mid,
+						tip = tip,
+						rootWorldPosition = bone.WorldPosition,
+						debounce = false,
+					})
+				end
+			end
+		end
+	end
+
+	local function playBladeLean(blade, localTiltAxis)
+		local midLean = CFrame.fromAxisAngle(localTiltAxis, math.rad(MID_LEAN_ANGLE_DEGREES))
+		local tipLean = CFrame.fromAxisAngle(localTiltAxis, math.rad(TIP_EXTRA_LEAN_ANGLE_DEGREES))
+
+		local midLeanTween = TweenService:Create(
+			blade.mid,
+			TweenInfo.new(DENSE_LEAN_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+			{ Transform = midLean }
+		)
+		local tipLeanTween = TweenService:Create(
+			blade.tip,
+			TweenInfo.new(DENSE_LEAN_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+			{ Transform = tipLean }
+		)
+
+		midLeanTween.Completed:Connect(function(playbackState)
+			if playbackState ~= Enum.PlaybackState.Completed then
+				blade.debounce = false
+				return
+			end
+			local midReturnTween = TweenService:Create(
+				blade.mid,
+				TweenInfo.new(DENSE_RETURN_TIME, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+				{ Transform = CFrame.new() }
+			)
+			local tipReturnTween = TweenService:Create(
+				blade.tip,
+				TweenInfo.new(DENSE_RETURN_TIME, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+				{ Transform = CFrame.new() }
+			)
+			tipReturnTween:Play()
+			midReturnTween.Completed:Connect(function()
+				blade.debounce = false
+			end)
+			midReturnTween:Play()
+		end)
+
+		tipLeanTween:Play()
+		midLeanTween:Play()
+	end
+
+	local sweepOnCooldown = false
+
+	meshPart.Touched:Connect(function(hit)
+		local character = hit.Parent
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if not humanoid or character ~= localPlayer.Character then
+			return
+		end
+
+		if sweepOnCooldown then
+			return
+		end
+		sweepOnCooldown = true
+		task.delay(TOUCH_SWEEP_COOLDOWN, function()
+			sweepOnCooldown = false
+		end)
+
+		local rootPart = character:FindFirstChild("HumanoidRootPart")
+		if not rootPart then
+			return
+		end
+		local playerPosition = rootPart.Position
+
+		for _, blade in ipairs(blades) do
+			if not blade.debounce then
+				local delta = blade.rootWorldPosition - playerPosition
+				local horizontalDelta = Vector3.new(delta.X, 0, delta.Z)
+				if horizontalDelta.Magnitude <= BEND_RADIUS_STUDS then
+					local awayDirection = horizontalDelta.Magnitude > 0.01 and horizontalDelta.Unit
+						or meshPart.CFrame.LookVector
+					local worldTiltAxis = Vector3.new(-awayDirection.Z, 0, awayDirection.X)
+					local localTiltAxis = meshPart.CFrame:VectorToObjectSpace(worldTiltAxis).Unit
+
+					blade.debounce = true
+					playBladeLean(blade, localTiltAxis)
+				end
+			end
+		end
+	end)
+end
+
+local denseGrassRoot = Workspace:FindFirstChild(DENSE_GRASS_ROOT_NAME)
+if denseGrassRoot then
+	local denseGrassMesh = denseGrassRoot:FindFirstChild(DENSE_GRASS_MESH_NAME)
+	if denseGrassMesh then
+		setupDenseGrassPatch(denseGrassMesh)
+	end
+end

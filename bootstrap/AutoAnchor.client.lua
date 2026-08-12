@@ -36,13 +36,25 @@ local function watchForUnanchoring(instance)
 	end)
 end
 
+-- pcall'd so a problem with one instance can't silently kill the rest of
+-- the loop (and, more importantly, the DescendantAdded connection that
+-- comes after it) - which would explain everything after the failure point
+-- staying permanently unanchored.
 local function setupPart(instance)
-	anchorIfEligible(instance)
-	watchForUnanchoring(instance)
+	local ok, err = pcall(function()
+		anchorIfEligible(instance)
+		watchForUnanchoring(instance)
+	end)
+	if not ok then
+		warn("AutoAnchor: failed to set up " .. instance:GetFullName() .. ": " .. tostring(err))
+	end
 end
 
-for _, descendant in ipairs(Workspace:GetDescendants()) do
+local existing = Workspace:GetDescendants()
+for _, descendant in ipairs(existing) do
 	setupPart(descendant)
 end
+print(string.format("AutoAnchor: processed %d existing Workspace descendants", #existing))
 
 Workspace.DescendantAdded:Connect(setupPart)
+print("AutoAnchor: watching for new Workspace descendants")
